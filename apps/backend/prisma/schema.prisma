@@ -14,18 +14,18 @@ datasource db {
 // ============================================================================
 
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
+  id            String   @id @default(cuid())
+  email         String   @unique
   passwordHash  String
   firstName     String?
   lastName      String?
   avatar        String?
-  emailVerified Boolean      @default(false)
-  isActive      Boolean      @default(true)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  emailVerified Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  memberships   Membership[]
+  memberships Membership[]
 
   @@index([email])
 }
@@ -40,33 +40,33 @@ model Business {
   website     String?
   phone       String?
   email       String?
-  address     Json?    // { street, city, state, zip, country }
-  settings    Json?    // Business-specific settings
+  address     Json? // { street, city, state, zip, country }
+  settings    Json? // Business-specific settings
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  memberships      Membership[]
-  legalEntities    LegalEntity[]
-  accounts         Account[]
-  transactions     Transaction[]
-  invoices         Invoice[]
-  bills            Bill[]
-  customers        Customer[]
-  vendors          Vendor[]
-  employees        Employee[]
-  leads            Lead[]
-  contacts         Contact[]
-  deals            Deal[]
-  campaigns        Campaign[]
-  socialAccounts   SocialAccount[]
-  posts            Post[]
-  tickets          Ticket[]
-  files            File[]
-  events           Event[]
-  integrations     Integration[]
-  kpiDefinitions   KpiDefinition[]
-  aiInsights       AiInsight[]
+  memberships    Membership[]
+  legalEntities  LegalEntity[]
+  accounts       Account[]
+  transactions   Transaction[]
+  invoices       Invoice[]
+  bills          Bill[]
+  customers      Customer[]
+  vendors        Vendor[]
+  employees      Employee[]
+  leads          Lead[]
+  contacts       Contact[]
+  deals          Deal[]
+  campaigns      Campaign[]
+  socialAccounts SocialAccount[]
+  posts          Post[]
+  tickets        Ticket[]
+  files          File[]
+  events         Event[]
+  integrations   Integration[]
+  kpiDefinitions KpiDefinition[]
+  aiInsights     AiInsight[]
 
   @@index([slug])
 }
@@ -110,20 +110,20 @@ enum FileType {
 }
 
 model File {
-  id          String   @id @default(cuid())
-  businessId  String
-  name        String
+  id           String   @id @default(cuid())
+  businessId   String
+  name         String
   originalName String
-  mimeType    String
-  size        Int
-  type        FileType
-  url         String
-  storageKey  String   // S3 key or file path
-  metadata    Json?    // Additional metadata (OCR text, etc.)
-  tags        String[]
-  uploadedBy  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  mimeType     String
+  size         Int
+  type         FileType
+  url          String
+  storageKey   String // S3 key or file path
+  metadata     Json? // Additional metadata (OCR text, etc.)
+  tags         String[]
+  uploadedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -144,15 +144,15 @@ enum EventType {
 }
 
 model Event {
-  id          String    @id @default(cuid())
-  businessId  String
-  type        EventType
-  action      String    // e.g., "user.login", "ai.generate_email", "integration.sync"
-  userId      String?   // Who triggered it (if user action)
-  metadata    Json?     // Event-specific data
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(cuid())
+  businessId String
+  type       EventType
+  action     String // e.g., "user.login", "ai.generate_email", "integration.sync"
+  userId     String? // Who triggered it (if user action)
+  metadata   Json? // Event-specific data
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -177,19 +177,19 @@ enum IntegrationType {
 }
 
 model Integration {
-  id          String          @id @default(cuid())
-  businessId  String
-  type        IntegrationType
-  provider    String          // e.g., "stripe", "gmail", "facebook"
-  name        String
-  config      Json            // Provider-specific config
-  authData    Json?           // OAuth tokens (encrypted)
-  isActive    Boolean         @default(true)
-  lastSyncAt  DateTime?
-  syncStatus  String?         // "success", "error", "in_progress"
-  syncError   String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id         String          @id @default(cuid())
+  businessId String
+  type       IntegrationType
+  provider   String // e.g., "stripe", "gmail", "facebook"
+  name       String
+  config     Json // Provider-specific config
+  authData   Json? // OAuth tokens (encrypted)
+  isActive   Boolean         @default(true)
+  lastSyncAt DateTime?
+  syncStatus String? // "success", "error", "in_progress"
+  syncError  String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -248,20 +248,21 @@ enum AccountType {
 }
 
 model Account {
-  id           String      @id @default(cuid())
-  businessId   String
-  name         String
-  type         AccountType
-  number       String?
-  institution  String?
-  balance      Decimal     @default(0) @db.Decimal(15, 2)
-  currency     String      @default("USD")
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id          String      @id @default(cuid())
+  businessId  String
+  name        String
+  type        AccountType
+  number      String?
+  institution String?
+  balance     Decimal     @default(0) @db.Decimal(15, 2)
+  currency    String      @default("USD")
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
+  business         Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  transactions     Transaction[]
+  JournalEntryLine JournalEntryLine[]
 
   @@index([businessId])
 }
@@ -295,6 +296,43 @@ model Transaction {
   @@index([date])
 }
 
+model JournalEntry {
+  entry_id   String   @id @default(cuid())
+  posted_at  DateTime
+  memo       String?
+  created_by String?
+  status     String
+
+  journal_entry_lines JournalEntryLine[]
+
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  line_id    String  @id @default(cuid())
+  entry_id   String
+  account_id String
+  debit      Decimal @default(0) @db.Decimal(15, 2)
+  credit     Decimal @default(0) @db.Decimal(15, 2)
+
+  journal_entry JournalEntry @relation(fields: [entry_id], references: [entry_id], onDelete: Cascade)
+  account       Account      @relation(fields: [account_id], references: [id], onDelete: Cascade)
+
+  @@index([entry_id])
+  @@index([account_id])
+  @@map("journal_entry_lines")
+}
+
+model Budget {
+  budget_id   String  @id @default(cuid())
+  fiscal_year Int
+  department  String
+  amount      Decimal @db.Decimal(15, 2)
+  version     Int
+
+  @@map("budgets")
+}
+
 enum InvoiceStatus {
   DRAFT
   SENT
@@ -304,23 +342,23 @@ enum InvoiceStatus {
 }
 
 model Invoice {
-  id          String        @id @default(cuid())
-  businessId  String
-  customerId  String
-  number      String
-  amount      Decimal       @db.Decimal(15, 2)
-  tax         Decimal       @default(0) @db.Decimal(15, 2)
-  total       Decimal       @db.Decimal(15, 2)
-  currency    String        @default("USD")
-  status      InvoiceStatus @default(DRAFT)
-  issueDate   DateTime
-  dueDate     DateTime
-  paidDate    DateTime?
-  items       Json          // Line items
-  notes       String?
-  metadata    Json?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id         String        @id @default(cuid())
+  businessId String
+  customerId String
+  number     String
+  amount     Decimal       @db.Decimal(15, 2)
+  tax        Decimal       @default(0) @db.Decimal(15, 2)
+  total      Decimal       @db.Decimal(15, 2)
+  currency   String        @default("USD")
+  status     InvoiceStatus @default(DRAFT)
+  issueDate  DateTime
+  dueDate    DateTime
+  paidDate   DateTime?
+  items      Json // Line items
+  notes      String?
+  metadata   Json?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
@@ -366,17 +404,17 @@ model Bill {
 }
 
 model Customer {
-  id          String    @id @default(cuid())
-  businessId  String
-  name        String
-  email       String?
-  phone       String?
-  address     Json?
-  taxId       String?
+  id           String   @id @default(cuid())
+  businessId   String
+  name         String
+  email        String?
+  phone        String?
+  address      Json?
+  taxId        String?
   paymentTerms String?
-  metadata    Json?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   invoices Invoice[]
@@ -386,17 +424,17 @@ model Customer {
 }
 
 model Vendor {
-  id          String   @id @default(cuid())
-  businessId  String
-  name        String
-  email       String?
-  phone       String?
-  address     Json?
-  taxId       String?
+  id           String   @id @default(cuid())
+  businessId   String
+  name         String
+  email        String?
+  phone        String?
+  address      Json?
+  taxId        String?
   paymentTerms String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   bills    Bill[]
@@ -411,7 +449,7 @@ model Vendor {
 model Employee {
   id         String    @id @default(cuid())
   businessId String
-  userId     String?   // Link to User if they have account access
+  userId     String? // Link to User if they have account access
   firstName  String
   lastName   String
   email      String
@@ -444,19 +482,19 @@ enum LeadStatus {
 }
 
 model Lead {
-  id          String     @id @default(cuid())
-  businessId  String
-  name        String
-  email       String?
-  phone       String?
-  company     String?
-  source      String?
-  status      LeadStatus @default(NEW)
-  value       Decimal?   @db.Decimal(15, 2)
-  notes       String?
-  metadata    Json?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id         String     @id @default(cuid())
+  businessId String
+  name       String
+  email      String?
+  phone      String?
+  company    String?
+  source     String?
+  status     LeadStatus @default(NEW)
+  value      Decimal?   @db.Decimal(15, 2)
+  notes      String?
+  metadata   Json?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -492,19 +530,19 @@ enum DealStage {
 }
 
 model Deal {
-  id          String    @id @default(cuid())
-  businessId  String
-  customerId  String?
-  name        String
-  value       Decimal   @db.Decimal(15, 2)
-  stage       DealStage @default(LEAD)
-  probability Int       @default(0)
+  id                String    @id @default(cuid())
+  businessId        String
+  customerId        String?
+  name              String
+  value             Decimal   @db.Decimal(15, 2)
+  stage             DealStage @default(LEAD)
+  probability       Int       @default(0)
   expectedCloseDate DateTime?
   actualCloseDate   DateTime?
-  notes       String?
-  metadata    Json?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  notes             String?
+  metadata          Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
@@ -559,7 +597,7 @@ model SocialAccount {
   businessId  String
   platform    SocialPlatform
   username    String
-  accessToken String?        // Encrypted
+  accessToken String? // Encrypted
   isActive    Boolean        @default(true)
   metadata    Json?
   createdAt   DateTime       @default(now())
@@ -580,18 +618,18 @@ enum PostStatus {
 }
 
 model Post {
-  id              String      @id @default(cuid())
+  id              String     @id @default(cuid())
   businessId      String
   socialAccountId String
   content         String
   mediaUrls       String[]
-  status          PostStatus  @default(DRAFT)
+  status          PostStatus @default(DRAFT)
   scheduledFor    DateTime?
   publishedAt     DateTime?
-  metrics         Json?       // likes, shares, comments, reach
+  metrics         Json? // likes, shares, comments, reach
   metadata        Json?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   business      Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
   socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
@@ -629,7 +667,7 @@ model Ticket {
   priority    TicketPriority @default(MEDIUM)
   assignedTo  String?
   customerId  String?
-  channel     String?        // email, chat, phone
+  channel     String? // email, chat, phone
   tags        String[]
   metadata    Json?
   createdAt   DateTime       @default(now())
@@ -661,9 +699,9 @@ model KpiDefinition {
   name        String
   description String?
   type        KpiType
-  unit        String?  // e.g., "USD", "count", "percentage"
+  unit        String? // e.g., "USD", "count", "percentage"
   target      Decimal? @db.Decimal(15, 2)
-  formula     String?  // How to calculate it
+  formula     String? // How to calculate it
   metadata    Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -686,7 +724,7 @@ model AiInsight {
   type        InsightType
   title       String
   description String
-  severity    String?     // low, medium, high
+  severity    String? // low, medium, high
   actionable  Boolean     @default(false)
   actionTaken Boolean     @default(false)
   metadata    Json?
