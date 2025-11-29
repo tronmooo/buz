@@ -14,6 +14,7 @@ import { fileRouter } from './routes/file';
 import { customerRouter } from './routes/customer';
 import { accountRouter } from './routes/account';
 import { aiRouter } from './routes/ai';
+import { identityLegalRouter } from './routes/identityLegal';
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use('/api/businesses/:businessId/invoices', invoiceRouter);
 app.use('/api/businesses/:businessId/transactions', transactionRouter);
 app.use('/api/businesses/:businessId/files', fileRouter);
 app.use('/api/businesses/:businessId/ai', aiRouter);
+app.use('/api/businesses/:businessId/identity-legal', identityLegalRouter);
 
 // Error handling
 app.use(errorHandler);

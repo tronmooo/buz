@@ -231,6 +231,80 @@ model LegalEntity {
   @@index([businessId])
 }
 
+enum IpAssetType {
+  PATENT
+  TRADEMARK
+  COPYRIGHT
+  TRADE_SECRET
+  OTHER
+}
+
+model IntellectualPropertyAsset {
+  id                 String     @id @default(cuid())
+  businessId         String
+  type               IpAssetType
+  title              String
+  registrationNumber String?
+  jurisdiction       String?
+  status             String?
+  filingDate         DateTime?
+  expirationDate     DateTime?
+  metadata           Json?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([registrationNumber])
+}
+
+enum ComplianceStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  EXPIRED
+}
+
+model ComplianceDocument {
+  id         String           @id @default(cuid())
+  businessId String
+  title      String
+  category   String?
+  status     ComplianceStatus @default(DRAFT)
+  issuedBy   String?
+  validFrom  DateTime?
+  validTo    DateTime?
+  fileUrl    String?
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+}
+
+model InternalPolicy {
+  id           String   @id @default(cuid())
+  businessId   String
+  title        String
+  version      String
+  summary      String?
+  content      String?
+  effectiveDate DateTime?
+  retiredAt    DateTime?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([version])
+}
+
 // ============================================================================
 // FINANCE & ACCOUNTING
 // ============================================================================
