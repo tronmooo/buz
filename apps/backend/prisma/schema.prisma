@@ -209,6 +209,133 @@ enum EntityType {
   NONPROFIT
 }
 
+model BusinessIdentity {
+  id                       String     @id @default(cuid())
+  businessId               String
+  name                     String
+  ein                      String?
+  entityType               EntityType
+  formationDate            DateTime?
+  stateRegistration        String?
+  registrationRenewalDate  DateTime?
+  stateGoodStanding        Boolean   @default(true)
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model LicensePermit {
+  id             String   @id @default(cuid())
+  businessId     String
+  licenseName    String
+  licenseNumber  String?
+  renewalDate    DateTime?
+  issuingAgency  String?
+  status         String   // e.g., active, expired, pending
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model ArticlesOfIncorporation {
+  id         String   @id @default(cuid())
+  businessId String
+  fileId     String
+  uploadedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model Contract {
+  id            String   @id @default(cuid())
+  businessId    String
+  contractTitle String
+  party         String
+  startDate     DateTime?
+  endDate       DateTime?
+  renewalTerms  String?
+  fileId        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model InsurancePolicy {
+  id             String   @id @default(cuid())
+  businessId     String
+  policyNumber   String
+  provider       String
+  coverageType   String?
+  premiumAmount  Decimal  @db.Decimal(15, 2)
+  renewalDate    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model IntellectualProperty {
+  id                  String   @id @default(cuid())
+  businessId          String
+  ipType              String
+  registrationNumber  String?
+  jurisdiction        String?
+  expirationDate      DateTime?
+  fileId              String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model ComplianceDocument {
+  id              String   @id @default(cuid())
+  businessId      String
+  docType         String
+  authority       String?
+  expirationDate  DateTime?
+  fileId          String?
+  status          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model InternalPolicy {
+  id             String   @id @default(cuid())
+  businessId     String
+  policyName     String
+  version        String
+  effectiveDate  DateTime?
+  fileId         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
 model LegalEntity {
   id              String     @id @default(cuid())
   businessId      String

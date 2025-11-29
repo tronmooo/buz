@@ -9,6 +9,7 @@ All notable changes to OmniBusiness AI will be documented in this file.
 - Added dashboard top bar (global search + AI prompt) and right-side context panel wired to AI ask/insights endpoints.
 - Added shared AI hooks (`useAISummary`, `useAIInsights`, `useAIAsk`) and reused them in the AI page and dashboard shell.
 - Added global search results page (`/dashboard/search`) that queries contacts and customers with search terms from the top bar.
+- Added Identity & Legal schemas: BusinessIdentity, LicensePermit, ArticlesOfIncorporation, Contract, InsurancePolicy, IntellectualProperty, ComplianceDocument, InternalPolicy with business scoping.
 
 ## [0.1.0] - Phase 0: Foundation - 2025-11-29
 
