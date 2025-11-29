@@ -1,0 +1,701 @@
+// Prisma schema for OmniBusiness AI
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// CORE: Global & Multi-tenancy
+// ============================================================================
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  passwordHash  String
+  firstName     String?
+  lastName      String?
+  avatar        String?
+  emailVerified Boolean      @default(false)
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  memberships   Membership[]
+
+  @@index([email])
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+  industry    String?
+  website     String?
+  phone       String?
+  email       String?
+  address     Json?    // { street, city, state, zip, country }
+  settings    Json?    // Business-specific settings
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships      Membership[]
+  legalEntities    LegalEntity[]
+  accounts         Account[]
+  transactions     Transaction[]
+  invoices         Invoice[]
+  bills            Bill[]
+  customers        Customer[]
+  vendors          Vendor[]
+  employees        Employee[]
+  leads            Lead[]
+  contacts         Contact[]
+  deals            Deal[]
+  campaigns        Campaign[]
+  socialAccounts   SocialAccount[]
+  posts            Post[]
+  tickets          Ticket[]
+  files            File[]
+  events           Event[]
+  integrations     Integration[]
+  kpiDefinitions   KpiDefinition[]
+  aiInsights       AiInsight[]
+
+  @@index([slug])
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  STAFF
+  ACCOUNTANT
+  VIEWER
+}
+
+model Membership {
+  id         String   @id @default(cuid())
+  userId     String
+  businessId String
+  role       Role     @default(STAFF)
+  isActive   Boolean  @default(true)
+  invitedBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId])
+  @@index([userId])
+  @@index([businessId])
+}
+
+// ============================================================================
+// FILES & DOCUMENTS
+// ============================================================================
+
+enum FileType {
+  DOCUMENT
+  IMAGE
+  SPREADSHEET
+  PDF
+  OTHER
+}
+
+model File {
+  id          String   @id @default(cuid())
+  businessId  String
+  name        String
+  originalName String
+  mimeType    String
+  size        Int
+  type        FileType
+  url         String
+  storageKey  String   // S3 key or file path
+  metadata    Json?    // Additional metadata (OCR text, etc.)
+  tags        String[]
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([tags])
+}
+
+// ============================================================================
+// EVENTS & AUDIT LOG
+// ============================================================================
+
+enum EventType {
+  USER_ACTION
+  SYSTEM_ACTION
+  AI_ACTION
+  INTEGRATION_SYNC
+  ERROR
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  businessId  String
+  type        EventType
+  action      String    // e.g., "user.login", "ai.generate_email", "integration.sync"
+  userId      String?   // Who triggered it (if user action)
+  metadata    Json?     // Event-specific data
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// INTEGRATIONS
+// ============================================================================
+
+enum IntegrationType {
+  BANKING
+  EMAIL
+  CALENDAR
+  SOCIAL_MEDIA
+  ACCOUNTING
+  CRM
+  FILE_STORAGE
+  OTHER
+}
+
+model Integration {
+  id          String          @id @default(cuid())
+  businessId  String
+  type        IntegrationType
+  provider    String          // e.g., "stripe", "gmail", "facebook"
+  name        String
+  config      Json            // Provider-specific config
+  authData    Json?           // OAuth tokens (encrypted)
+  isActive    Boolean         @default(true)
+  lastSyncAt  DateTime?
+  syncStatus  String?         // "success", "error", "in_progress"
+  syncError   String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([type])
+}
+
+// ============================================================================
+// IDENTITY & LEGAL
+// ============================================================================
+
+enum EntityType {
+  SOLE_PROPRIETOR
+  LLC
+  CORPORATION
+  PARTNERSHIP
+  NONPROFIT
+}
+
+model LegalEntity {
+  id              String     @id @default(cuid())
+  businessId      String
+  type            EntityType
+  legalName       String
+  dbaName         String?
+  ein             String?
+  registrationNum String?
+  state           String?
+  country         String     @default("US")
+  formationDate   DateTime?
+  dissolutionDate DateTime?
+  isActive        Boolean    @default(true)
+  metadata        Json?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+// ============================================================================
+// FINANCE & ACCOUNTING
+// ============================================================================
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT_CARD
+  CASH
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model Account {
+  id           String      @id @default(cuid())
+  businessId   String
+  name         String
+  type         AccountType
+  number       String?
+  institution  String?
+  balance      Decimal     @default(0) @db.Decimal(15, 2)
+  currency     String      @default("USD")
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([businessId])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  businessId  String
+  accountId   String
+  type        TransactionType
+  amount      Decimal         @db.Decimal(15, 2)
+  currency    String          @default("USD")
+  description String?
+  category    String?
+  date        DateTime
+  reconciled  Boolean         @default(false)
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  account  Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([accountId])
+  @@index([date])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  businessId  String
+  customerId  String
+  number      String
+  amount      Decimal       @db.Decimal(15, 2)
+  tax         Decimal       @default(0) @db.Decimal(15, 2)
+  total       Decimal       @db.Decimal(15, 2)
+  currency    String        @default("USD")
+  status      InvoiceStatus @default(DRAFT)
+  issueDate   DateTime
+  dueDate     DateTime
+  paidDate    DateTime?
+  items       Json          // Line items
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, number])
+  @@index([businessId])
+  @@index([customerId])
+  @@index([status])
+}
+
+enum BillStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Bill {
+  id         String     @id @default(cuid())
+  businessId String
+  vendorId   String
+  number     String?
+  amount     Decimal    @db.Decimal(15, 2)
+  tax        Decimal    @default(0) @db.Decimal(15, 2)
+  total      Decimal    @db.Decimal(15, 2)
+  currency   String     @default("USD")
+  status     BillStatus @default(PENDING)
+  issueDate  DateTime
+  dueDate    DateTime
+  paidDate   DateTime?
+  items      Json
+  notes      String?
+  metadata   Json?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  vendor   Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([vendorId])
+  @@index([status])
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  businessId  String
+  name        String
+  email       String?
+  phone       String?
+  address     Json?
+  taxId       String?
+  paymentTerms String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+  deals    Deal[]
+
+  @@index([businessId])
+}
+
+model Vendor {
+  id          String   @id @default(cuid())
+  businessId  String
+  name        String
+  email       String?
+  phone       String?
+  address     Json?
+  taxId       String?
+  paymentTerms String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  bills    Bill[]
+
+  @@index([businessId])
+}
+
+// ============================================================================
+// HR / PEOPLE
+// ============================================================================
+
+model Employee {
+  id         String    @id @default(cuid())
+  businessId String
+  userId     String?   // Link to User if they have account access
+  firstName  String
+  lastName   String
+  email      String
+  phone      String?
+  position   String?
+  department String?
+  hireDate   DateTime?
+  endDate    DateTime?
+  salary     Decimal?  @db.Decimal(15, 2)
+  isActive   Boolean   @default(true)
+  metadata   Json?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+// ============================================================================
+// SALES & CRM
+// ============================================================================
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  UNQUALIFIED
+  CONVERTED
+}
+
+model Lead {
+  id          String     @id @default(cuid())
+  businessId  String
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  source      String?
+  status      LeadStatus @default(NEW)
+  value       Decimal?   @db.Decimal(15, 2)
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+}
+
+model Contact {
+  id         String   @id @default(cuid())
+  businessId String
+  firstName  String
+  lastName   String?
+  email      String?
+  phone      String?
+  company    String?
+  position   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+enum DealStage {
+  LEAD
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+model Deal {
+  id          String    @id @default(cuid())
+  businessId  String
+  customerId  String?
+  name        String
+  value       Decimal   @db.Decimal(15, 2)
+  stage       DealStage @default(LEAD)
+  probability Int       @default(0)
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([stage])
+}
+
+// ============================================================================
+// MARKETING & SOCIAL
+// ============================================================================
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  businessId  String
+  name        String
+  description String?
+  status      CampaignStatus @default(DRAFT)
+  budget      Decimal?       @db.Decimal(15, 2)
+  startDate   DateTime?
+  endDate     DateTime?
+  metrics     Json?
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+}
+
+enum SocialPlatform {
+  FACEBOOK
+  INSTAGRAM
+  TWITTER
+  LINKEDIN
+  TIKTOK
+  YOUTUBE
+}
+
+model SocialAccount {
+  id          String         @id @default(cuid())
+  businessId  String
+  platform    SocialPlatform
+  username    String
+  accessToken String?        // Encrypted
+  isActive    Boolean        @default(true)
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  posts    Post[]
+
+  @@index([businessId])
+  @@index([platform])
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+model Post {
+  id              String      @id @default(cuid())
+  businessId      String
+  socialAccountId String
+  content         String
+  mediaUrls       String[]
+  status          PostStatus  @default(DRAFT)
+  scheduledFor    DateTime?
+  publishedAt     DateTime?
+  metrics         Json?       // likes, shares, comments, reach
+  metadata        Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  business      Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+// ============================================================================
+// CUSTOMER SUPPORT
+// ============================================================================
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  businessId  String
+  subject     String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  assignedTo  String?
+  customerId  String?
+  channel     String?        // email, chat, phone
+  tags        String[]
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  resolvedAt  DateTime?
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+  @@index([priority])
+}
+
+// ============================================================================
+// ANALYTICS & STRATEGY
+// ============================================================================
+
+enum KpiType {
+  FINANCIAL
+  SALES
+  MARKETING
+  OPERATIONS
+  CUSTOM
+}
+
+model KpiDefinition {
+  id          String   @id @default(cuid())
+  businessId  String
+  name        String
+  description String?
+  type        KpiType
+  unit        String?  // e.g., "USD", "count", "percentage"
+  target      Decimal? @db.Decimal(15, 2)
+  formula     String?  // How to calculate it
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+enum InsightType {
+  RISK_ALERT
+  OPPORTUNITY
+  RECOMMENDATION
+  SUMMARY
+}
+
+model AiInsight {
+  id          String      @id @default(cuid())
+  businessId  String
+  type        InsightType
+  title       String
+  description String
+  severity    String?     // low, medium, high
+  actionable  Boolean     @default(false)
+  actionTaken Boolean     @default(false)
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  expiresAt   DateTime?
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([type])
+  @@index([createdAt])
+}
